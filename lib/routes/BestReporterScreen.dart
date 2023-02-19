@@ -1,6 +1,6 @@
-import 'package:best_reporter/configs/googleSpreadSheetConfig/GSheetsAPIConfig.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gsheets/src/gsheets.dart';
@@ -13,7 +13,6 @@ import '../res/constants.dart';
 import '../res/latLngs.dart';
 import '../res/strings.dart';
 import '../res/textStyles.dart';
-import 'dart:math';
 
 class BestReporterScreen extends StatefulWidget {
   const BestReporterScreen({Key? key}) : super(key: key);
@@ -127,7 +126,31 @@ class _BestReporterScreenState extends State<BestReporterScreen> {
   }
 
   void loadData() async {
-    final ss = await GSheetsAPIConfig.gSheets.spreadsheet(GSheetsAPIConfig.spreadsheetId);
+    await dotenv.load(fileName: ".env");
+    String googleKeyId = dotenv.env['GOOGLE_KEY_ID']!;
+    String googleKey = dotenv.env['GOOGLE_KEY']!;
+    String googleClientEmail = dotenv.env['GOOGLE_CLIENT_EMAIL']!;
+    String googleClientId = dotenv.env['GOOGLE_CLIENT_ID']!;
+
+
+    String googleCredential = '''
+    {
+    "type": "service_account",
+    "project_id": "best-reporter-test",
+    "private_key_id": "$googleKeyId",
+    "private_key": "$googleKey",
+    "client_email": "$googleClientEmail",
+    "client_id": "$googleClientId",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bestreportertest%40best-reporter-test.iam.gserviceaccount.com"
+    }
+    ''';
+
+    var gSheets = GSheets(googleCredential);
+
+    final ss = await gSheets.spreadsheet(dotenv.env['SPREADSHEET_ID']!);
     var postAndPlaceSheet = ss.worksheetByTitle('PostAndPlace');
     var tMapPlaceSheet = ss.worksheetByTitle('TMapPlace');
     var memberSheet = ss.worksheetByTitle('Member');
